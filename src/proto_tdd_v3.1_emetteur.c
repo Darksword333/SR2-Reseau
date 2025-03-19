@@ -60,16 +60,24 @@ int main(int argc, char* argv[]){
             vers_reseau(&paquet);
             if (borne_inf == curseur)
                 depart_temporisateur(100);
-            curseur = inc(SEQ_NUM_SIZE, curseur);
+            inc(SEQ_NUM_SIZE, &curseur);
         }
         else {
             evt = attendre();
             if (evt == -1) { //Paquet Recu
                 de_reseau(&pack);
                 if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window)) {
-                    borne_inf = inc(SEQ_NUM_SIZE, pack.num_seq);
-                    if (borne_inf == curseur)
-                        arret_temporisateur();
+                    if (pack.num_seq == borne_inf) {
+                        for (int i=0; i<pack.lg_info; i++) 
+                            message[i] = pack.info[i];
+                        taille_msg = pack.lg_info;
+                        inc(SEQ_NUM_SIZE, &borne_inf);
+                        if (borne_inf == curseur)
+                            arret_temporisateur();
+                    }
+                    else {
+                        printf("[TRP] Paquet ACK recu hors sequence.\n");
+                    }
                 }
             }
             else { //Temporisateur Expiré
@@ -77,7 +85,7 @@ int main(int argc, char* argv[]){
                 depart_temporisateur(100);
                 while (i != curseur) {
                     vers_reseau(&fenetre[i]);
-                    i = inc(SEQ_NUM_SIZE, i);
+                    inc(SEQ_NUM_SIZE, &i);
                 }
             }
         }

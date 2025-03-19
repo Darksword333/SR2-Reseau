@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
             fenetre[paquet.num_seq] = paquet;
-            while (curseur == borne_inf){ /* tant que j'ai des paquets en avance dans mon buffer fenetre*/
-                borne_inf = inc(SEQ_NUM_SIZE, borne_inf);
+            while (curseur == borne_inf){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
+                inc(SEQ_NUM_SIZE, &borne_inf);
                 for (int i=0; i<fenetre[curseur].lg_info; i++) {
                     message[i] = fenetre[curseur].info[i];
                 }
