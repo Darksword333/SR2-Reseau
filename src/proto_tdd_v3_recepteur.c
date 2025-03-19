@@ -22,6 +22,9 @@ int main(int argc, char* argv[])
     int curseur= 0;
     int borne_inf = 0;
     paquet_t fenetre[window];
+    for (int i=0; i<window; i++) {
+        fenetre[i].lg_info = 0;
+    }
 
     unsigned char message[MAX_INFO];
     paquet_t paquet, pack;
@@ -42,12 +45,13 @@ int main(int argc, char* argv[])
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
             fenetre[paquet.num_seq] = paquet;
-            while (curseur == borne_inf){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
+            while (curseur == borne_inf && fenetre[curseur].lg_info != 0){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
                 inc(SEQ_NUM_SIZE, &borne_inf);
                 for (int i=0; i<fenetre[curseur].lg_info; i++) {
                     message[i] = fenetre[curseur].info[i];
                 }
                 fin = vers_application(message, paquet.lg_info);
+                fenetre[curseur].lg_info = 0;
             }
         }
         else {
