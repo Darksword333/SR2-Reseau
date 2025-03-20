@@ -34,12 +34,11 @@ int main(int argc, char* argv[])
 
     while ( !fin ) {
         de_reseau(&paquet);
-        if (verifier_controle(&paquet) && dans_fenetre(borne_inf, paquet.num_seq, window)){ 
-            pack.type = ACK;
+        if (verifier_controle(&paquet) && dans_fenetre(borne_inf, paquet.num_seq, window)){
             pack.num_seq = paquet.num_seq;
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
-            borne_inf = inc(SEQ_NUM_SIZE, borne_inf);
+            borne_inf ++;
             printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
@@ -48,14 +47,13 @@ int main(int argc, char* argv[])
             fin = vers_application(message, paquet.lg_info);
         }
         else {
-            if (!verifier_controle(&paquet)){
-                printf("[TRP] Erreur de somme de controle.\n");
-                printf("[GAB] J'ai reçu %d mais j'attendais %d du paquet %d\n", paquet.somme_ctrl, generer_controle(&paquet), paquet.num_seq);
-                return 0;
-            }
-            else{
+            if (!dans_fenetre(borne_inf, paquet.num_seq, window)){
                 printf("[TRP] Hors fenetre.\n");
                 printf("[GAB] J'ai reçu %d mais j'attendais %d\n", paquet.num_seq, borne_inf);
+            }
+            else{
+                printf("[TRP] Erreur de somme de controle.\n");
+                printf("[GAB] J'ai reçu %d mais j'attendais %d du paquet %d\n", paquet.somme_ctrl, generer_controle(&paquet), paquet.num_seq);
             }
             if (pack.type == ACK){ //envoie du dernier bon ack si il y en a un bien reçu sinon attend l'expiration du temporisateur
                 vers_reseau(&pack); 

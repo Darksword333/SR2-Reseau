@@ -51,6 +51,7 @@ int main(int argc, char* argv[]){
             for (int i=0; i<taille_msg; i++) 
                 paquet.info[i] = message[i];
                 
+            paquet.num_seq = curseur;
             paquet.lg_info = taille_msg;
             paquet.type = DATA;
             paquet.somme_ctrl = generer_controle(&paquet);
@@ -60,24 +61,24 @@ int main(int argc, char* argv[]){
             printf("[GAB] J'envoie le paquet %d\n", curseur);
             if (borne_inf == curseur) // Lancement du temporisateur si c'est le premier paquet de la fenêtre
                 depart_temporisateur(100);
-            curseur = inc(SEQ_NUM_SIZE, curseur);
+            curseur ++;
         }
         else {
             evt = attendre();
-            while((borne_inf-1) != curseur){ // borne_inf-1 car borne_inf peut être égal à curseur
+            while(borne_inf != curseur){ // borne_inf-1 car borne_inf peut être égal à curseur
                 if (evt == -1){ //Paquet Reçu
                     de_reseau(&pack);
                     printf("[GAB] J'ai reçu le paquet %d\n", pack.num_seq);
                     if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window))
-                        borne_inf = inc(SEQ_NUM_SIZE, pack.num_seq);
+                        borne_inf = pack.num_seq + 1;
                     arret_temporisateur();
                 }
                 //Sinon Temporisateur Expiré donc retransmission sans incrémentation de la borne_inf
                 i = borne_inf;
-                while ((i-1) != curseur) { // Retransmission de tous les paquets de la fenêtre
+                while (i != curseur) { // Retransmission de tous les paquets de la fenêtre
                     printf("[GAB] Je retransmets le paquet %d\n", i);
                     vers_reseau(&fenetre[i]);
-                    i = inc(SEQ_NUM_SIZE, i);
+                    i ++;
                 }
                 depart_temporisateur(100);
                 evt = attendre();

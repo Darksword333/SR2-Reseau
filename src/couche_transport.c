@@ -21,11 +21,6 @@ int verifier_controle(const paquet_t *paquet) {
     return generer_controle(paquet) == paquet->somme_ctrl;
 }
 
-
-int inc(int n, int curseur) {
-    return curseur = (curseur + 1) % n;
-}
-
 /*--------------------------------------*/
 /* Fonction d'inclusion dans la fenetre */
 /*--------------------------------------*/
