@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
             else { //Temporisateur Expiré
                 i = borne_inf;
                 depart_temporisateur(100);
-                while (i != curseur) {
+                while (i != curseur) { // Retransmission de la borne_inf a la fin de ma fenêtre donc curseur
                     vers_reseau(&fenetre[i]);
                     i = inc(SEQ_NUM_SIZE, i);
                 }

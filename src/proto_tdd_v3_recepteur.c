@@ -45,19 +45,18 @@ int main(int argc, char* argv[])
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
             fenetre[paquet.num_seq] = paquet;
-            while (curseur == borne_inf && fenetre[curseur].lg_info != 0){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
-                borne_inf = inc(SEQ_NUM_SIZE, borne_inf);
+            while (borne_inf != curseur && fenetre[curseur].lg_info != 0){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
                 for (int i=0; i<fenetre[curseur].lg_info; i++) {
                     message[i] = fenetre[curseur].info[i];
                 }
                 fin = vers_application(message, paquet.lg_info);
-                fenetre[curseur].lg_info = 0;
+                borne_inf = inc(SEQ_NUM_SIZE, borne_inf);
             }
         }
         else {
             printf("[TRP] Erreur de somme de controle ou hors séquence.\n");
             if (pack.type == ACK)
-                vers_reseau(&pack); //envoie du dernier bon ack si il y en a un bien reçu sinon attend l'expiration du temporisateur
+                vers_reseau(&pack); //envoie du dernier bon ack si il y en a un bien reçu sinon envoie un nack mais comme non traité dans l'emetteur : attend l'expiration du temporisateur
         }
         
     }
