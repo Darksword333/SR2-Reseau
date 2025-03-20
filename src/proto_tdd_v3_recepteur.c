@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
             vers_reseau(&pack);
             fenetre[paquet.num_seq] = paquet;
             while (curseur == borne_inf && fenetre[curseur].lg_info != 0){ /* tant que j'ai des paquets en avance dans mon buffer fenetre et qu'ils sont ceux que j'attends*/
-                inc(SEQ_NUM_SIZE, &borne_inf);
+                borne_inf = inc(SEQ_NUM_SIZE, borne_inf);
                 for (int i=0; i<fenetre[curseur].lg_info; i++) {
                     message[i] = fenetre[curseur].info[i];
                 }

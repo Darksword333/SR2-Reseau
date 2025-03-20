@@ -22,8 +22,8 @@ int verifier_controle(const paquet_t *paquet) {
 }
 
 
-void inc(int n, int *const curseur) {
-    *curseur = (*curseur + 1) % n;
+int inc(int n, int curseur) {
+    return curseur = (curseur + 1) % n;
 }
 
 /*--------------------------------------*/
