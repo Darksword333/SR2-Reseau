@@ -76,6 +76,7 @@ int main(int argc, char* argv[]){
                 //Sinon Temporisateur Expiré donc retransmission sans incrémentation de la borne_inf
                 i = borne_inf;
                 while (i != curseur) { // Retransmission de tous les paquets de la fenêtre
+                    // peut etre construire les nouveaux paquets ici et les transmettres en decalant la fenetre
                     printf("[GAB] Je retransmets le paquet %d\n", i);
                     vers_reseau(&fenetre[i]);
                     i ++;
