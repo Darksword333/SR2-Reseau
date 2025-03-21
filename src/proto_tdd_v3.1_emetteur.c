@@ -46,8 +46,8 @@ int main(int argc, char* argv[]){
 
     de_application(message, &taille_msg);
 
-    while ( taille_msg != 0 ) { // Vérifier le dernier paquet
-        if (dans_fenetre(borne_inf, curseur, window)){
+    while ( taille_msg != 0  || borne_inf !=curseur ) { // Vérifier le dernier paquet
+        if (dans_fenetre(borne_inf, curseur+1, window)){ // Incrémenter en trop dans la boucle
             for (int i=0; i<taille_msg; i++) 
                 paquet.info[i] = message[i];
             
