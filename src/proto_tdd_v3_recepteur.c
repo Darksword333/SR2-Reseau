@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
             pack.num_seq = paquet.num_seq;
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
-            borne_inf ++;
+            borne_inf = inc(borne_inf, 4); // Modulo taille de la fenêtre emetteur
             printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
