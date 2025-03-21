@@ -21,6 +21,10 @@ int verifier_controle(const paquet_t *paquet) {
     return generer_controle(paquet) == paquet->somme_ctrl;
 }
 
+int inc(int const n, int const mod){
+    return (n+1) % mod;
+}
+
 /*--------------------------------------*/
 /* Fonction d'inclusion dans la fenetre */
 /*--------------------------------------*/

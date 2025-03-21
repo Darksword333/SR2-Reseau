@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
 
     de_application(message, &taille_msg);
 
-    while ( taille_msg != 0 ) {
+    while ( taille_msg != 0 ) { // Vérifier le dernier paquet
         if (dans_fenetre(borne_inf, curseur, window)){
             for (int i=0; i<taille_msg; i++) 
                 paquet.info[i] = message[i];
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
             printf("[GAB] J'envoie le paquet %d\n", curseur);
             if (borne_inf == curseur) // Lancement du temporisateur si c'est le premier paquet de la fenêtre
                 depart_temporisateur(100);
-            curseur ++;
+            curseur = inc(curseur, window);
         }
         else {
             evt = attendre();
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
                     de_reseau(&pack);
                     printf("[GAB] J'ai reçu le paquet %d\n", pack.num_seq);
                     if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window))
-                        borne_inf = pack.num_seq + 1;
+                        borne_inf = inc(pack.num_seq, window);
                     arret_temporisateur();
                 }
                 //Sinon Temporisateur Expiré donc retransmission sans incrémentation de la borne_inf
