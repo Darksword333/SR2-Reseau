@@ -23,9 +23,9 @@ int main(int argc, char* argv[]){
         return 1;
     }
     if (argc == 2) { // Si un argument est passé, on le prend comme taille de la fenêtre
-        window = atoi(argv[1]); 
-        if (window >= SEQ_NUM_SIZE) {
-            printf("La taille de la fenêtre doit être inférieure à %d\n", SEQ_NUM_SIZE);
+        window = atoi(argv[1]);
+        if (window < 1 && window < ((SEQ_NUM_SIZE-1)/2)) {
+            printf("Erreur Taille Fenetre\n");
             return 1;
         }
     }
@@ -39,6 +39,8 @@ int main(int argc, char* argv[]){
     paquet_t paquet, pack;
     int evt;
 
+    int max_try = 4;
+
     init_reseau(EMISSION);
 
     printf("[TRP] Initialisation reseau : OK.\n");
@@ -46,8 +48,8 @@ int main(int argc, char* argv[]){
 
     de_application(message, &taille_msg);
 
-    while ( taille_msg != 0  || borne_inf !=curseur ) { // Vérifier le dernier paquet
-        if (dans_fenetre(borne_inf, curseur+1, window)){ // Incrémenter en trop dans la boucle
+    while (taille_msg != 0) { //|| borne_inf-1 != curseur ) {
+        if (dans_fenetre(borne_inf, curseur, window)){
             for (int i=0; i<taille_msg; i++) 
                 paquet.info[i] = message[i];
             
@@ -55,39 +57,58 @@ int main(int argc, char* argv[]){
             paquet.lg_info = taille_msg;
             paquet.type = DATA;
             paquet.somme_ctrl = generer_controle(&paquet);
-            printf("[GAB] Paquet, Num : %d, Taille : %d, Type : %d, Somme : %d\n", paquet.num_seq, paquet.lg_info, paquet.type, paquet.somme_ctrl);
             buffer[curseur] = paquet;
 
             vers_reseau(&paquet);
-            printf("[GAB] J'envoie le paquet %d\n", curseur);
+            printf("[GAB] J'envoie le paquet %d-->\n", curseur);
             if (borne_inf == curseur) // Lancement du temporisateur si c'est le premier paquet de la fenêtre
                 depart_temporisateur(100);
-            curseur = inc(curseur, window);
+            curseur = inc(curseur, SEQ_NUM_SIZE);
+            de_application(message, &taille_msg);
         }
         else {
-            evt = attendre();
             while(borne_inf != curseur){ 
-                if (evt == -1){ //Paquet Reçu
+                if ((evt = attendre()) == PAQUET_RECU){
                     de_reseau(&pack);
-                    printf("[GAB] J'ai reçu le paquet %d\n", pack.num_seq);
-                    if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window))
-                        borne_inf = inc(pack.num_seq, window);
-                    arret_temporisateur();
+                    printf("[GAB] J'ai reçu le paquet %d<--\n", pack.num_seq);
+                    if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window)){
+                        borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
+                        printf("[GAB] Curseur : %d, Borne_inf : %d\n", borne_inf, curseur);
+                    }
+                    if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
+                        arret_temporisateur();
                 }
-                //Sinon Temporisateur Expiré donc retransmission sans incrémentation de la borne_inf
-                i = borne_inf;
-                while (i != curseur) { // Retransmission de tous les paquets de la fenêtre
-                    // peut etre construire les nouveaux paquets ici et les transmettres en decalant la buffer
-                    printf("[GAB] Je retransmets le paquet %d\n", i);
-                    vers_reseau(&buffer[i]);
-                    i ++;
+                else {
+                    i = borne_inf;
+                    while (i != curseur) { // Retransmission de tous les paquets de la fenêtre
+                        printf("[GAB] Je retransmets le paquet %d-->\n", i);
+                        vers_reseau(&buffer[i]);
+                        i = inc(i, SEQ_NUM_SIZE);
+                    }
+                    depart_temporisateur(100);
                 }
-                depart_temporisateur(100);
-                evt = attendre();
             }
         }
-        de_application(message, &taille_msg);
-        
+    }
+    i = 0; // Essaye Max_try fois de recevoir le dernier paquet sinon arrête
+    while (pack.num_seq != curseur && max_try != i) { // Envoi du dernier paquet et vérification de la réception
+        evt = attendre();
+        if (evt == PAQUET_RECU){
+            de_reseau(&pack);
+            printf("[GAB] J'ai reçu le dernier paquet %d<--\n", pack.num_seq);
+            if (verifier_controle(&pack) && curseur == pack.num_seq)
+                arret_temporisateur();
+        }
+        else {
+            vers_reseau(&buffer[curseur]);
+            depart_temporisateur(100);
+            while((evt = attendre()) != PAQUET_RECU){
+                depart_temporisateur(100);
+                vers_reseau(&buffer[curseur]);
+                printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
+                }
+            }
+        i++;
     }
 
     printf("[TRP] Fin execution protocole transfert de donnees (TDD).\n");

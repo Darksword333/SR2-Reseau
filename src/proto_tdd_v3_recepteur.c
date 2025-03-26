@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
             pack.num_seq = paquet.num_seq;
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
-            borne_inf = inc(borne_inf, 4); // Modulo taille de la fenêtre emetteur
+            borne_inf = inc(borne_inf, SEQ_NUM_SIZE);
             printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
             for (int i=0; i<paquet.lg_info; i++) {
                 message[i] = paquet.info[i];
@@ -47,15 +47,19 @@ int main(int argc, char* argv[])
             fin = vers_application(message, paquet.lg_info);
         }
         else {
-            if (!dans_fenetre(borne_inf, paquet.num_seq, window)){
+            if (!dans_fenetre(borne_inf, paquet.num_seq, window)){ // Hors fenetre
                 printf("[TRP] Hors fenetre.\n");
                 printf("[GAB] J'ai reçu %d mais j'attendais %d\n", paquet.num_seq, borne_inf);
+                vers_reseau(&pack); 
+                printf("[GAB] J'envoie le dernier bon ack %d mais j'ai reçu %d\n", pack.num_seq, paquet.num_seq);
             }
-            else{
+            else { // Erreur de somme de controle 
                 printf("[TRP] Erreur de somme de controle.\n");
                 printf("[GAB] J'ai reçu %d mais j'attendais %d du paquet %d\n", paquet.somme_ctrl, generer_controle(&paquet), paquet.num_seq);
+                vers_reseau(&pack); 
+                printf("[GAB] J'envoie le dernier bon ack %d mais j'ai reçu %d\n", pack.num_seq, paquet.num_seq);
             }
-            if (pack.type == ACK){ //envoie du dernier bon ack si il y en a un bien reçu sinon attend l'expiration du temporisateur
+            if (pack.type == ACK){ //envoie du dernier bon ack si il y en a un bien reçu sinon attend l'expiration du temporisateur (en envoyant un nack)
                 vers_reseau(&pack); 
                 printf("[GAB] J'envoie le dernier bon ack %d mais j'ai reçu %d\n", pack.num_seq, paquet.num_seq);
             }
