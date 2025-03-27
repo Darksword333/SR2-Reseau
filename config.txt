@@ -9,7 +9,7 @@ FICHIER_OUT fichiers/out.txt
 # Initialisation réseau
 #------------------------
 # Emetteur
-PROBA_PERTE_E 0.8
+PROBA_PERTE_E 0.0
 PROBA_ERREUR_E 0.0
 # Recepteur
 PROBA_PERTE_R 0.0
