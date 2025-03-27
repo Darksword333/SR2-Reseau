@@ -15,8 +15,7 @@
 /* =============================== */
 /* Programme principal - émetteur  */
 /* =============================== */
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
     unsigned char message[MAX_INFO];
     int taille_msg;
     paquet_t paquet, pack;

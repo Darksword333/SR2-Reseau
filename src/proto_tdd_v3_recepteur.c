@@ -16,8 +16,7 @@
 /* =============================== */
 /* Programme principal - récepteur */
 /* =============================== */
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
     int window = 1;
     int borne_inf = 0;
 

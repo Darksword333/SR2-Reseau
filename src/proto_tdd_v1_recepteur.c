@@ -15,8 +15,7 @@
 /* =============================== */
 /* Programme principal - récepteur */
 /* =============================== */
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
     unsigned char message[MAX_INFO];
     paquet_t paquet, pack;
     pack.lg_info = 0;
