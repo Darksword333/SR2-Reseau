@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
     paquet_t paquet, pack;
     int evt;
 
-    int max_try = 4;
+    int max_try = 10;
 
     init_reseau(EMISSION);
 

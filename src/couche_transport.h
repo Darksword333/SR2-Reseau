@@ -48,5 +48,6 @@ int dans_fenetre(unsigned int inf, unsigned int pointeur, int taille);
 extern int generer_controle(const paquet_t *paquet);
 extern int verifier_controle(const paquet_t *paquet);
 extern int inc(int const n, int const mod);
+extern void retransmit(int const borne_inf, int const curseur, paquet_t const *buffer);
 
 #endif
