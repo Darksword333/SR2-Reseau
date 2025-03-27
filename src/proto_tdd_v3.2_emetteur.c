@@ -33,6 +33,7 @@ int main(int argc, char* argv[]){
     int curseur = 0, borne_inf = 0;
     paquet_t buffer[SEQ_NUM_SIZE];
     int i;
+    int ack_dup = 0;
 
     unsigned char message[MAX_INFO];
     int taille_msg;
@@ -66,21 +67,34 @@ int main(int argc, char* argv[]){
             curseur = inc(curseur, SEQ_NUM_SIZE);
             de_application(message, &taille_msg);
         }
-        else {
+        else { // Si la fenêtre est pleine, on attend les acquittements
             while(borne_inf != curseur){ 
                 if ((evt = attendre()) == PAQUET_RECU){
                     de_reseau(&pack);
                     printf("[GAB] J'ai reçu le paquet %d<--\n", pack.num_seq);
-                    if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window)){
-                        borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
-                        printf("[GAB] Curseur : %d, Borne_inf : %d\n", borne_inf, curseur);
+                    if (verifier_controle(&pack)){
+                        if(inc(pack.num_seq,16) == borne_inf){
+                            ack_dup++;
+                            printf("[GAB] ------ ack_dup : %d\n", ack_dup);
+                            if(ack_dup == 3){ // Lors de la réception du 3ème ack dupliqué, on retransmet la fenêtre
+                              arret_temporisateur();
+                              printf("[GAB] 3 ACK dupliqués\n");
+                              retransmit(borne_inf, curseur, buffer);
+                              ack_dup = 0;
+                            }
+                        }
+                        if (dans_fenetre(borne_inf, pack.num_seq, window)){
+                            borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
+                            printf("[GAB] Curseur : %d, Borne_inf : %d\n", borne_inf, curseur);
+                            if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
+                                arret_temporisateur();
+                        }
+                        
                     }
-                    if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
-                        arret_temporisateur();
                 }
-                else {
+                else 
                     retransmit(borne_inf, curseur, buffer);
-                }
+                
             }
         }
     }
@@ -91,20 +105,26 @@ int main(int argc, char* argv[]){
         if (evt == PAQUET_RECU){
             de_reseau(&pack);
             printf("[GAB] J'ai reçu le dernier paquet %d<--\n", pack.num_seq);
-            if (verifier_controle(&pack) && curseur == pack.num_seq)
-                arret_temporisateur();
-            else {
-                vers_reseau(&buffer[curseur]);
-                depart_temporisateur(100);
-                while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Reception d'ack mais mauvais ack
-                    depart_temporisateur(100);
-                    vers_reseau(&buffer[curseur]);
-                    printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
-                    i++;
+            if (verifier_controle(&pack)){
+                if(inc(pack.num_seq,16) == borne_inf){
+                    ack_dup++;
+                    printf("[GAB] ------ ack_dup : %d\n", ack_dup);
+                    if(ack_dup == 3){ // Lors de la réception du 3ème ack dupliqué, on retransmet la fenêtre
+                      arret_temporisateur();
+                      printf("[GAB] 3 ACK dupliqués\n");
+                      retransmit(borne_inf, curseur, buffer);
+                      ack_dup = 0;
+                    }
                 }
+                if(dans_fenetre(borne_inf, pack.num_seq, window)){
+                    ack_dup = 0;
+                    borne_inf = inc(pack.num_seq, 16);
+                    if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
+                        arret_temporisateur();
+                } 
             }
         }
-        else {
+        else { // TIMEOUT
             vers_reseau(&buffer[curseur]);
             depart_temporisateur(100);
             while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Non Reception d'ack
