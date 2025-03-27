@@ -91,6 +91,7 @@ int main(int argc, char* argv[]){
         }
     }
     i = 0; // Essaye Max_try fois de recevoir le dernier paquet sinon arrête
+    curseur --; // Curseur est incrémenté une fois de trop
     while (pack.num_seq != curseur && max_try != i) { // Envoi du dernier paquet et vérification de la réception
         evt = attendre();
         if (evt == PAQUET_RECU){
@@ -98,17 +99,27 @@ int main(int argc, char* argv[]){
             printf("[GAB] J'ai reçu le dernier paquet %d<--\n", pack.num_seq);
             if (verifier_controle(&pack) && curseur == pack.num_seq)
                 arret_temporisateur();
+            else {
+                vers_reseau(&buffer[curseur]);
+                depart_temporisateur(100);
+                while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Reception d'ack mais mauvais ack
+                    depart_temporisateur(100);
+                    vers_reseau(&buffer[curseur]);
+                    printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
+                    i++;
+                }
+            }
         }
         else {
             vers_reseau(&buffer[curseur]);
             depart_temporisateur(100);
-            while((evt = attendre()) != PAQUET_RECU){
+            while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Non Reception d'ack
                 depart_temporisateur(100);
                 vers_reseau(&buffer[curseur]);
                 printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
+                i++;
                 }
             }
-        i++;
     }
 
     printf("[TRP] Fin execution protocole transfert de donnees (TDD).\n");
