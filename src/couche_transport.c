@@ -35,6 +35,20 @@ void retransmit(int const borne_inf, int const curseur, paquet_t const *buffer) 
     depart_temporisateur(100);
 }
 
+int check_and_deliver(paquet_t buffer[], int recu[], int *borne_inf){
+    int fin = 0;
+    unsigned char message[MAX_INFO];
+    while (recu[*borne_inf]) {
+        for (int i=0; i<buffer[*borne_inf].lg_info; i++) {
+            message[i] = buffer[*borne_inf].info[i];
+        }
+        fin = vers_application(message, buffer[*borne_inf].lg_info);
+        recu[*borne_inf] = 0;  // Marquer comme traité
+        *borne_inf = inc(borne_inf, SEQ_NUM_SIZE);
+    }
+    return fin;
+}
+
 /*--------------------------------------*/
 /* Fonction d'inclusion dans la fenetre */
 /*--------------------------------------*/

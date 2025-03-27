@@ -49,5 +49,6 @@ extern int generer_controle(const paquet_t *paquet);
 extern int verifier_controle(const paquet_t *paquet);
 extern int inc(int const n, int const mod);
 extern void retransmit(int const borne_inf, int const curseur, paquet_t const *buffer);
+extern int check_and_deliver(paquet_t buffer[], int recu[], int *borne_inf);
 
 #endif
