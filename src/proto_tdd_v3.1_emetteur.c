@@ -60,7 +60,6 @@ int main(int argc, char* argv[]){
             buffer[curseur] = paquet;
 
             vers_reseau(&paquet);
-            printf("[GAB] J'envoie le paquet %d-->\n", curseur);
             if (borne_inf == curseur) // Lancement du temporisateur si c'est le premier paquet de la fenêtre
                 depart_temporisateur(100);
             curseur = inc(curseur, SEQ_NUM_SIZE);
@@ -70,22 +69,13 @@ int main(int argc, char* argv[]){
             while(borne_inf != curseur){ 
                 if ((evt = attendre()) == PAQUET_RECU){
                     de_reseau(&pack);
-                    printf("[GAB] J'ai reçu le paquet %d<--\n", pack.num_seq);
-                    if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window)){
+                    if (verifier_controle(&pack) && dans_fenetre(borne_inf, pack.num_seq, window))
                         borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
-                        printf("[GAB] Curseur : %d, Borne_inf : %d\n", borne_inf, curseur);
-                    }
                     if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
                         arret_temporisateur();
                 }
                 else {
-                    i = borne_inf;
-                    while (i != curseur) { // Retransmission de tous les paquets de la fenêtre
-                        printf("[GAB] Je retransmets le paquet %d-->\n", i);
-                        vers_reseau(&buffer[i]);
-                        i = inc(i, SEQ_NUM_SIZE);
-                    }
-                    depart_temporisateur(100);
+                    retransmit(borne_inf, curseur, buffer);
                 }
             }
         }
@@ -96,7 +86,6 @@ int main(int argc, char* argv[]){
         evt = attendre();
         if (evt == PAQUET_RECU){
             de_reseau(&pack);
-            printf("[GAB] J'ai reçu le dernier paquet %d<--\n", pack.num_seq);
             if (verifier_controle(&pack) && curseur == pack.num_seq)
                 arret_temporisateur();
             else {
@@ -105,7 +94,6 @@ int main(int argc, char* argv[]){
                 while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Reception d'ack mais mauvais ack
                     depart_temporisateur(100);
                     vers_reseau(&buffer[curseur]);
-                    printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
                     i++;
                 }
             }
@@ -116,7 +104,6 @@ int main(int argc, char* argv[]){
             while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Non Reception d'ack
                 depart_temporisateur(100);
                 vers_reseau(&buffer[curseur]);
-                printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
                 i++;
                 }
             }

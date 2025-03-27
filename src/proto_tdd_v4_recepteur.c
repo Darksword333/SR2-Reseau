@@ -51,7 +51,7 @@ int main(int argc, char* argv[]){
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
             printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
-            if (paquet.num_seq != curseur){
+            if (paquet.num_seq != borne_inf){
                 buffer[paquet.num_seq] = paquet;
                 recu[paquet.num_seq] = 1;
             }
@@ -60,6 +60,25 @@ int main(int argc, char* argv[]){
                 curseur = inc(curseur, SEQ_NUM_SIZE);
             }
             fin = check_and_deliver(buffer, recu, &borne_inf);
+        }
+        else {
+            if (!verifier_controle(&paquet)){ // Erreur de somme de controle 
+                printf("[TRP] Erreur de somme de controle.\n");
+                printf("[GAB] J'ai reçu %d mais j'attendais %d du paquet %d\n", paquet.somme_ctrl, generer_controle(&paquet), paquet.num_seq);
+            }
+            else { // Hors fenetre
+                printf("[TRP] Hors fenetre.\n");
+                printf("[GAB] J'ai reçu %d mais j'attendais %d\n", paquet.num_seq, borne_inf);
+                if (paquet.num_seq < borne_inf){
+                    pack.num_seq = paquet.num_seq;
+                    pack.type = ACK;
+                    pack.somme_ctrl = generer_controle(&pack);
+                    vers_reseau(&pack);
+                    printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
+                }
+                // Si c'est supérieur a la fenetre je ne fais rien 
+                // j'attends de recevoir les paquets en fenetre via expiration de temporisateur
+            }
         }
     }
 

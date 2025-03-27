@@ -61,7 +61,6 @@ int main(int argc, char* argv[]){
             buffer[curseur] = paquet;
 
             vers_reseau(&paquet);
-            printf("[GAB] J'envoie le paquet %d-->\n", curseur);
             if (borne_inf == curseur) // Lancement du temporisateur si c'est le premier paquet de la fenêtre
                 depart_temporisateur(100);
             curseur = inc(curseur, SEQ_NUM_SIZE);
@@ -71,21 +70,17 @@ int main(int argc, char* argv[]){
             while(borne_inf != curseur){ 
                 if ((evt = attendre()) == PAQUET_RECU){
                     de_reseau(&pack);
-                    printf("[GAB] J'ai reçu le paquet %d<--\n", pack.num_seq);
                     if (verifier_controle(&pack)){
                         if(inc(pack.num_seq,16) == borne_inf){
                             ack_dup++;
-                            printf("[GAB] ------ ack_dup : %d\n", ack_dup);
                             if(ack_dup == 3){ // Lors de la réception du 3ème ack dupliqué, on retransmet la fenêtre
                               arret_temporisateur();
-                              printf("[GAB] 3 ACK dupliqués\n");
                               retransmit(borne_inf, curseur, buffer);
                               ack_dup = 0;
                             }
                         }
                         if (dans_fenetre(borne_inf, pack.num_seq, window)){
                             borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
-                            printf("[GAB] Curseur : %d, Borne_inf : %d\n", borne_inf, curseur);
                             if (borne_inf == curseur) // Arrêt du temporisateur si c'est le dernier paquet de la fenêtre
                                 arret_temporisateur();
                         }
@@ -104,14 +99,11 @@ int main(int argc, char* argv[]){
         evt = attendre();
         if (evt == PAQUET_RECU){
             de_reseau(&pack);
-            printf("[GAB] J'ai reçu le dernier paquet %d<--\n", pack.num_seq);
             if (verifier_controle(&pack)){
                 if(inc(pack.num_seq,16) == borne_inf){
                     ack_dup++;
-                    printf("[GAB] ------ ack_dup : %d\n", ack_dup);
                     if(ack_dup == 3){ // Lors de la réception du 3ème ack dupliqué, on retransmet la fenêtre
                       arret_temporisateur();
-                      printf("[GAB] 3 ACK dupliqués\n");
                       retransmit(borne_inf, curseur, buffer);
                       ack_dup = 0;
                     }
@@ -130,7 +122,6 @@ int main(int argc, char* argv[]){
             while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Non Reception d'ack
                 depart_temporisateur(100);
                 vers_reseau(&buffer[curseur]);
-                printf("[GAB] Je retransmets le dernier paquet %d-->\n", curseur);
                 i++;
                 }
             }
