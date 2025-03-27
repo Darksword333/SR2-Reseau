@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     paquet_t buffer[SEQ_NUM_SIZE];
     int recu[SEQ_NUM_SIZE] = {0};
     pack.lg_info = 0;
-    pack.type = NACK;
+    pack.type = ACK;
     int fin = 0;
 
     init_reseau(RECEPTION);
@@ -47,7 +47,6 @@ int main(int argc, char* argv[]){
         de_reseau(&paquet);
         if (verifier_controle(&paquet) && dans_fenetre(borne_inf, paquet.num_seq, window)){
             pack.num_seq = paquet.num_seq;
-            pack.type = ACK;
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
             printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);

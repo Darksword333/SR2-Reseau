@@ -25,7 +25,7 @@ int inc(int const n, int const mod){
     return (n+1) % mod;
 }
 
-void retransmit(int const borne_inf, int const curseur, paquet_t const *buffer) {
+void retransmit(int const borne_inf, int const curseur, paquet_t *buffer) {
     int i = borne_inf;
     while (i != curseur) {
         printf("[GAB] Je retransmets le paquet %d-->\n", i);
@@ -44,7 +44,7 @@ int check_and_deliver(paquet_t buffer[], int recu[], int *borne_inf){
         }
         fin = vers_application(message, buffer[*borne_inf].lg_info);
         recu[*borne_inf] = 0;  // Marquer comme traité
-        *borne_inf = inc(borne_inf, SEQ_NUM_SIZE);
+        *borne_inf = inc(*borne_inf, SEQ_NUM_SIZE);
     }
     return fin;
 }

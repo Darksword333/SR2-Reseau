@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
 
     int curseur = 0, borne_inf = 0;
     paquet_t buffer[SEQ_NUM_SIZE];
-    int i;
+    int i = 0;
     int ack_dup = 0;
 
     unsigned char message[MAX_INFO];
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
             }
         }
     }
-    i = 0; // Essaye Max_try fois de recevoir le dernier paquet sinon arrête
+    // Essaye Max_try fois de recevoir le dernier paquet sinon arrête
     curseur --; // Curseur est incrémenté une fois de trop
     while (pack.num_seq != curseur && max_try != i) { // Envoi du dernier paquet et vérification de la réception
         evt = attendre();
