@@ -60,7 +60,6 @@ int main(int argc, char* argv[]){
             buffer[curseur] = paquet;
 
             vers_reseau(&paquet);
-            printf("[GAB] J'envoie le paquet %d\n", curseur);
             depart_temporisateur_num(curseur, 100);
             curseur = inc(curseur, SEQ_NUM_SIZE);
             de_application(message, &taille_msg);
@@ -77,18 +76,46 @@ int main(int argc, char* argv[]){
                                 borne_inf = inc(borne_inf, SEQ_NUM_SIZE);
                             }
                         }
-                        borne_inf = inc(pack.num_seq, SEQ_NUM_SIZE);
                         arret_temporisateur_num(pack.num_seq);
-                        printf("[GAB] J'ai reçu l'acquittement du paquet %d\n", pack.num_seq);
                     }
                 }
                 else {
                     vers_reseau(&buffer[evt]);
-                    printf("[GAB] Je retransmets le paquet %d\n", evt);
                     depart_temporisateur_num(evt, 100);
                 }
             }
         }
     }
+    // Essaye Max_try fois de recevoir le dernier paquet sinon arrête
+    curseur --; // Curseur est incrémenté une fois de trop
+    while (pack.num_seq != curseur && max_try != i) { // Envoi du dernier paquet et vérification de la réception
+        evt = attendre();
+        if (evt == PAQUET_RECU){
+            de_reseau(&pack);
+            if (verifier_controle(&pack) && curseur == pack.num_seq){
+                arret_temporisateur_num(curseur);
+                recu[curseur] = 1;
+            }
+            else {
+                vers_reseau(&buffer[curseur]);
+                depart_temporisateur_num(curseur, 100);
+                while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Reception d'ack mais mauvais ack
+                    depart_temporisateur_num(curseur, 100);
+                    vers_reseau(&buffer[curseur]);
+                    i++;
+                }
+            }
+        }
+        else {
+            vers_reseau(&buffer[curseur]);
+            depart_temporisateur_num(curseur, 100);
+            while(((evt = attendre()) != PAQUET_RECU) && max_try != i){ // Cas ou Non Reception d'ack
+                depart_temporisateur_num(curseur, 100);
+                vers_reseau(&buffer[curseur]);
+                i++;
+                }
+            }
+    }
+    printf("[TRP] Fin execution protocole transfert de donnees (TDD).\n");
     return 0;
 }

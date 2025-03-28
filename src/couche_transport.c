@@ -28,7 +28,6 @@ int inc(int const n, int const mod){
 void retransmit(int const borne_inf, int const curseur, paquet_t *buffer) {
     int i = borne_inf;
     while (i != curseur) {
-        printf("[GAB] Je retransmets le paquet %d-->\n", i);
         vers_reseau(&buffer[i]);
         i = inc(i, SEQ_NUM_SIZE);
     }

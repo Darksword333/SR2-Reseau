@@ -29,8 +29,7 @@ int main(int argc, char* argv[]){
             return 1;
         }
     }
-    int borne_inf = 0, curseur = 0;
-    unsigned char message[MAX_INFO];
+    int borne_inf = 0;
     paquet_t paquet, pack;
     paquet_t buffer[SEQ_NUM_SIZE];
     int recu[SEQ_NUM_SIZE] = {0};
@@ -49,31 +48,21 @@ int main(int argc, char* argv[]){
             pack.num_seq = paquet.num_seq;
             pack.somme_ctrl = generer_controle(&pack);
             vers_reseau(&pack);
-            printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
-            if (paquet.num_seq != borne_inf){
-                buffer[paquet.num_seq] = paquet;
-                recu[paquet.num_seq] = 1;
-            }
-            else {
-                borne_inf = inc(borne_inf, SEQ_NUM_SIZE);
-                curseur = inc(curseur, SEQ_NUM_SIZE);
-            }
-            fin = check_and_deliver(buffer, recu, &borne_inf);
+            buffer[paquet.num_seq] = paquet;
+            recu[paquet.num_seq] = 1;
+            if (paquet.num_seq == borne_inf)
+                fin = check_and_deliver(buffer, recu, &borne_inf);
         }
         else {
-            if (!verifier_controle(&paquet)){ // Erreur de somme de controle 
-                printf("[TRP] Erreur de somme de controle.\n");
-                printf("[GAB] J'ai reçu %d mais j'attendais %d du paquet %d\n", paquet.somme_ctrl, generer_controle(&paquet), paquet.num_seq);
-            }
-            else { // Hors fenetre
+            if (!dans_fenetre(borne_inf, paquet.num_seq, window)){ // Hors fenetre
                 printf("[TRP] Hors fenetre.\n");
-                printf("[GAB] J'ai reçu %d mais j'attendais %d\n", paquet.num_seq, borne_inf);
-                if (paquet.num_seq < borne_inf){
+                // Si c'est inférieur a la borne inférieure j'acquitte pour décaler la fenetre de l'emetteur
+                // Ou Si c'est inférieur a la borne inférieure et que la borne inférieure est a 0 (donc inférieur modulo 16)
+                if (paquet.num_seq < borne_inf || (borne_inf == 0 && paquet.num_seq < SEQ_NUM_SIZE)){
                     pack.num_seq = paquet.num_seq;
                     pack.type = ACK;
                     pack.somme_ctrl = generer_controle(&pack);
                     vers_reseau(&pack);
-                    printf("[GAB] J'acquittes le paquet %d\n", pack.num_seq);
                 }
                 // Si c'est supérieur a la fenetre je ne fais rien 
                 // j'attends de recevoir les paquets en fenetre via expiration de temporisateur
